@@ -1,3 +1,5 @@
+-- ty shadowexpl0it for leaking the source code
+-- key: PREMIUM10ZL
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window =
@@ -16,7 +18,8 @@ local Window =
             Invite = "https://discord.gg/x-force", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
             RememberJoins = false -- Set this to false to make them join the discord every time they load it up
         },
-        KeySystem = true, -- Set this to true to use our key system
+        -- disabled because why have it enabled
+        KeySystem = false, -- Set this to true to use our key system
         KeySettings = {
             Title = "Key | X-FORE",
             Subtitle = "Key System",
