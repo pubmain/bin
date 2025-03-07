@@ -2809,7 +2809,8 @@ function library:Init(key)
                 local TextboxFunctions = {}
                 function TextboxFunctions:Input(new)
                     new = new or textBoxValues.Text
-                    textBoxValues = new
+                    textBoxValues.Text = new
+                    callback(new)
                     return TextboxFunctions
                 end
 
@@ -3050,7 +3051,8 @@ function library:Init(key)
                 local TextboxFunctions = {}
                 function TextboxFunctions:Input(new)
                     new = new or textBoxValues.Text
-                    textBoxValues = new
+                    textBoxValues.Text = new
+                    callback(new)
                     return TextboxFunctions
                 end
 
@@ -3295,7 +3297,8 @@ function library:Init(key)
                 local TextboxFunctions = {}
                 function TextboxFunctions:Input(new)
                     new = new or textBoxValues.Text
-                    textBoxValues = new
+                    textBoxValues.Text = new
+                    callback(new)
                     return TextboxFunctions
                 end
 
