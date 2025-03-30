@@ -1,3 +1,7 @@
+local PHANTOM_ENV = getfenv()
+PHANTOM_ENV.SCRIPT_VERSION = "0.1"
+setfenv(0, PHANTOM_ENV)
+
 do
 	local ADONIS_BYPASSED = false
 	for _, mod in getloadedmodules() do
@@ -10,7 +14,7 @@ do
 	end
 end
 
-_G.PTM_MODE = "noassets"
+_G.PTM_MODES = { NoAssets = true, NoActorHooking = true }
 local function SendNotification(data)
 	game:GetService("StarterGui"):SetCore("SendNotification", data)
 end
@@ -44,9 +48,11 @@ local AssetMap = {
 --[[ MODES
 noassets - safest mode, cant be detected by any ContentProvider check
 ]]
-local PhantomModes = _G.PTM_MODES or {
-	NoAssets = _G.PTM_MODE == "noassets",
-}
+local PhantomModes = _G.PTM_MODES
+	or {
+		NoAssets = _G.PTM_MODE == "noassets",
+		NoActorHooking = _G.PTM_MODE == "noactorhook",
+	}
 
 if PhantomModes.NoAssets then
 	for key, _ in AssetMap do
@@ -72,27 +78,10 @@ end)()
 -- note: velocity v2 is ass rn
 CachedActors = type(CachedActors) == "table" and CachedActors or {}
 
-do
-	run_on_actor = run_on_actor or newcclosure(function() end)
-	local old
-	old = hookfunction(run_on_actor, function(actor, code, ...)
-		if not actor:IsDescendantOf(game) then
-			local PreviousParent = actor.Parent
-			local success = pcall(function()
-				actor.Parent = game
-			end)
-			if not success then
-				return SendNotification({
-					Title = "Phantom (run_on_actor)",
-					Text = string.format("Couldnt execute code on actor %s because its removed", actor.Name),
-				})
-				-- return warn(string.format("Couldnt execute code on actor %s because its removed", actor.Name))
-			end
-			actor.Parent = PreviousParent
-			-- actor.RobloxLocked = false
-		end
-		return old(actor, code, ...)
-	end)
+if not run_on_actor or not iscclosure(run_on_actor) then
+	run_on_actor = function(_, __, ...) end
+
+	SendNotification({ Title = "Phantom", Text = "Your executor doesnt support actor api, but the script will work!" })
 end
 
 for _, ScreenGui in HiddenInterface:GetChildren() do
@@ -158,7 +147,7 @@ do
 		Text.BorderSizePixel = 0
 		Text.Size = UDim2.new(1, 0, 1, 0)
 		Text.Font = Enum.Font.SourceSans
-		Text.Text = "Phantom v0.0"
+		Text.Text = "Phantom v" .. PHANTOM_ENV.SCRIPT_VERSION
 		Text.TextColor3 = Color3.fromRGB(236, 236, 236)
 		Text.TextScaled = true
 		Text.TextSize = 24.000
@@ -259,7 +248,6 @@ local API = {
 	PropertiesBlocked = {},
 	MovementAPI = "roblox",
 }
-local PHANTOM_ENV = getfenv()
 PHANTOM_ENV.API = API
 
 do
@@ -285,7 +273,7 @@ do
 		end
 	end
 
-	function API.execCmd(text)
+	function API.execCmd(text, noNotification)
 		local CommandName = text:split(" ")[1]
 		if CommandName == "" then
 			return
@@ -298,7 +286,7 @@ do
 			})
 		end
 		local success, err = pcall(Command.Callback, unpack(text:split(" "), 2))
-		if not success then
+		if not success and not noNotification then
 			SendNotification({ Title = string.format("Phantom, command %s failed", Command.Name), Text = err })
 		end
 	end
@@ -404,12 +392,17 @@ do
 	end)
 
 	for _, actor in CachedActors do
-		print("__index hook (spoof) for", actor)
+		if PhantomModes.NoActorHooking then
+			break
+		end
+		-- print("__index hook (spoof) for", actor, PhantomModes.NoActorHooking)
 		run_on_actor(
 			actor,
 			[[
-			game:GetService("ScriptContext"):SetTimeout(0)
 			local SpoofedProperties = ...
+			if typeof(SpoofedProperties) ~= "table" then
+				return error("If this error ever occurs please report it to the maintainers or try to restart the script (0x01)")
+			end	
 			local __index
 			__index = hookmetamethod(game, "__index", function(self, key)
 				if not checkcaller() then
@@ -439,13 +432,16 @@ do
 	-- 	local CachedCharacters = {}
 
 	-- 	local old
-	-- 	old = hookfunction(Utils.GetCharacter, function(player)
-	-- 		if CachedCharacters[player] and CachedCharacters[player].Parent ~= nil then
+	-- 	old = hookfunction(
+	-- 		Utils.GetCharacter,
+	-- 		newlclosure(function(player)
+	-- 			if CachedCharacters[player] and CachedCharacters[player].Parent ~= nil then
+	-- 				return CachedCharacters[player]
+	-- 			end
+	-- 			CachedCharacters[player] = old(player)
 	-- 			return CachedCharacters[player]
-	-- 		end
-	-- 		CachedCharacters[player] = old(player)
-	-- 		return CachedCharacters[player]
-	-- 	end)
+	-- 		end)
+	-- 	)
 	-- end
 
 	function Utils.GetProperty(instance, property)
@@ -666,7 +662,10 @@ do
 	end)
 
 	for _, actor in CachedActors do
-		print("__newindex hook for", actor)
+		if PhantomModes.NoActorHooking then
+			break
+		end
+		-- print("__newindex hook for", actor)
 		run_on_actor(
 			actor,
 			[[
@@ -783,6 +782,17 @@ do
 			-- error("TODO - implement Player.Move relativeToCamera")
 		end)
 	)
+
+	-- local function CharacterAdded(char)
+	-- 	char:FindFirstChild("Humanoid").Died:Once(function()
+	-- 		CurrentWalkDirection = Vector3.zero
+	-- 	end)
+	-- end
+
+	-- LocalPlayer.CharacterAdded:Connect(CharacterAdded)
+	-- if LocalPlayer.Character then
+	-- 	CharacterAdded(LocalPlayer.Character)
+	-- end
 end
 
 -- note: bhop
@@ -810,8 +820,38 @@ do
 
 	LocalPlayer.CharacterAdded:Connect(CharacterAdded)
 	if LocalPlayer.Character then
-		CharacterAdded(LocalPlayer.Character)
+		task.spawn(function()
+			repeat
+				task.wait()
+			until character:FindFirstChild("Humanoid", true)
+			CharacterAdded(LocalPlayer.Character)
+		end)
 	end
+end
+
+do
+	local TriggerBotEnabled = false
+	local Mouse = LocalPlayer:GetMouse()
+	API.addcmd("triggerbot", {}, function()
+		TriggerBotEnabled = not TriggerBotEnabled
+		SendNotification({
+			Title = "Phantom",
+			Text = string.format("Trigger bot is now %s", TriggerBotEnabled and "Enabled" or "Disabled"),
+		})
+		while TriggerBotEnabled do
+			RunService.Heartbeat:Wait()
+			if Mouse.Target then
+				local Character = Mouse.Target.Parent
+				local TargetPlayer = Players:GetPlayerFromCharacter(Character)
+				if TargetPlayer then
+					RunService.Heartbeat:Wait()
+					mouse1click()
+					RunService.Heartbeat:Wait()
+					mouse1release(0x01)
+				end
+			end
+		end
+	end)
 end
 
 -- note: spinbot
@@ -832,6 +872,19 @@ do
 			SendNotification({ Title = "Phantom - On respawn", Text = "Executing command " .. Command })
 			task.wait(0.2)
 			API.execCmd(Command)
+		end
+	end)
+end
+
+do
+	local Command = ""
+	API.addcmd("loop", { "heartbeat" }, function(...)
+		Command = table.concat({ ... }, " ")
+	end)
+
+	RunService.Heartbeat:Connect(function()
+		if Command ~= "" then
+			API.execCmd(Command, true)
 		end
 	end)
 end
