@@ -1307,7 +1307,7 @@ end
 function library:Close()
     self.open = not self.open
 
-    services.InputService.MouseIconEnabled = not self.open and self.mousestate or false
+    -- services.InputService.MouseIconEnabled = not self.open and self.mousestate or false
 
     if self.holder then
         self.holder.Visible = self.open
@@ -2802,15 +2802,15 @@ function library:Load(options)
         self.extension = extension
     end
 
-    local cursor = utility.create("Triangle", {
-        Thickness = 6,
-        Color = Color3.fromRGB(255, 255, 255),
-        ZIndex = 1000
-    })
+    -- local cursor = utility.create("Triangle", {
+    --     Thickness = 6,
+    --     Color = Color3.fromRGB(255, 255, 255),
+    --     ZIndex = 1000
+    -- })
 
-    self.cursor = cursor
+    -- self.cursor = cursor
 
-    services.InputService.MouseIconEnabled = false
+    -- services.InputService.MouseIconEnabled = false
 
     utility.connect(services.RunService.RenderStepped, function()
         if self.open then
