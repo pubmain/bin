@@ -1,55 +1,85 @@
 # Extrn Scripting Api (as of v0.0.1)
 
-# Globals
+## Globals
 
 -   game (DataModel)
 -   workspace
--   offsets
+-   wait (or just task.wait)
+-   script (script identifier idk why its here 🤔)
+-   tick, time (same as roblox)
+-   version
 
-# Functions
+## Libraries
 
-## version
+### input
 
-Returns the current version as a string
+### task
 
-## wait
+-   Theres no synchronize, desynchronize and defer
 
-Sleeps for `n` seconds
+[Roblox Documentation](https://create.roblox.com/docs/reference/engine/libraries/task)
 
-## Vector3.new
+## Instance
 
-Creates a new Vector3 with x, y, z (all optional)
+Check Roblox docs for the info about these
 
-## Vector2.new
+### Ported Roblox methods
 
-Creates a new Vector2 with x, y (all optional)
+-   FindFirstChild, GetChildren
+-   FindFirstChildOfClass, GetService, FindService (all are the same under the
+    hood)
 
-# Instance methods
+### Ported Roblox fields
+
+### Set & Get
+
+-   Workspace.CurrentCamera
+-   Humanoid.WalkSpeed, Humanoid.JumpPower, Humanoid.Sit
+-   BasePart.Anchored, BasePart.CanCollide, BasePart.CanTouch,
+    BasePart.Position, BasePart.Velocity, BasePart.Rotation,
+    BasePart.Orientation
+-   Player.Team
+
+### Get
+
+-   Player.Name, Player.DisplayName, Player.Character, Player.UserId
+
+### Custom Methods
+
+```lua
+Instance:Primitive(): Address
+```
+
+```lua
+Instance:Address(): Address
+```
 
 ## Address
 
-Returns the instance address in memory
+To create an `Address` object u have to call `Address.new(offset: u64)`
 
-## FindFirstChild
+NOTE: Address Library must be enabled by the user to be allowed to be used
 
-## FindFirstChildOfClass
-
-## GetChildren
-
-Returns an array of instances
-
-## GetAttributes
-
-Returns an array of attribute names (strings)
-
-## Read
+NOTE: Im talking about creating custom addresses, doing `Instance:Address()`
+works fine
 
 ```lua
-Instance:Read(offset: u64, return_type: "cstring" | "string" | "f32" | "bool" | "u8" | "u16" | "u32" | "u64" | "same for signed ints" | "Vector3" | "Vector2")
+Address:Read(
+    offset: u64,
+    type: "cstring" | "string" | "f32" | "bool" |
+          "u8" | "u16" | "u32" | "u64" | "same for signed ints" |
+          "Vector3" | "Vector2"
+    )
 ```
 
-## Write
-
 ```lua
-Instance:Read(offset: u64, return_type: "f32" | "f64" | "bool" | "u8" | "u16" | "u32" | "u64" | "same for signed ints" | "Vector3" | "Vector2", value)
+Address:Write(
+    offset: u64,
+    type: "f32" | "bool" |
+          "u32" | "u64"  |
+          "same for signed ints" |
+          "Vector3" | "Vector2"
+    ),
+    value
+)
 ```
