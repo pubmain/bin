@@ -49,9 +49,11 @@ local http_service = game:GetService("HttpService")
 local typeof = clonefunction(typeof)
 local request = clonefunction(request)
 local rawget = clonefunction(rawget)
-
 local string_match = clonefunction(string.match)
 local string_find = clonefunction(string.find)
+local string_reverse = clonefunction(string.reverse)
+local string_sub = clonefunction(string.sub)
+local hookfunction = clonefunction(hookfunction)
 
 --! pick host
 local host = "https://api.platoboost.net"
@@ -86,7 +88,7 @@ getgenv().request = newcclosure(function(options)
 				string_byte = hookfunction(string.byte, function(self, ...)
 					local secret = string_match(self, `%w+-%w+-(.+)`)
 					if secret then
-						SECRET = secret:sub(0, #secret - secret:reverse():find("%w") + 1)
+						SECRET = string_sub(secret, 0, #secret - string_find(string_reverse(secret), "%w") + 1)
 						hookfunction(string.byte, string_byte)
 					end
 					return string_byte(self, ...)
@@ -138,5 +140,3 @@ getgenv().request = newcclosure(function(options)
 
 	return request(options)
 end :: typeof(request))
-
-print("platoboost bypass")
