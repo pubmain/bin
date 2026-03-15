@@ -894,9 +894,7 @@ do
 	Library.Thread = function(self, Function)
 		local NewThread = coroutine.create(Function)
 
-		coroutine.wrap(function()
-			coroutine.resume(NewThread)
-		end)()
+		task.spawn(coroutine.resume, NewThread)
 
 		TableInsert(self.Threads, NewThread)
 
@@ -921,30 +919,20 @@ do
 	end
 
 	Library.Connect = function(self, Event, Callback, Name)
+		if not Name then
+			self.UnnamedConnections += 1
+		end
 		Name = Name or StringFormat("Connection_%s_%s", self.UnnamedConnections + 1, HttpService:GenerateGUID(false))
 
-		local NewConnection = {
-			Event = Event,
-			Callback = Callback,
-			Name = Name,
-			Connection = nil,
-		}
-
-		Library:Thread(function()
-			NewConnection.Connection = Event:Connect(Callback)
-		end)
+		local NewConnection = Event:Connect(Callback)
 
 		TableInsert(self.Connections, NewConnection)
 		return NewConnection
 	end
 
-	Library.Disconnect = function(self, Name)
-		for _, Connection in self.Connections do
-			if Connection.Name == Name then
-				Connection.Connection:Disconnect()
-				break
-			end
-		end
+	Library.Connection = function(self, Connection)
+		TableInsert(self.Connections, Connection)
+		return Connection
 	end
 
 	Library.NextFlag = function(self)
